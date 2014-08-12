@@ -1,4 +1,4 @@
-cordova.define("com.tuxpan.foregroundvideocapture.capture", function(require, exports, module) {/*
+cordova.define("com.tuxpan.foregroundvideocapture.captureFG", function(require, exports, module) {/*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -61,8 +61,8 @@ function CaptureFG() {
  * @param {Function} errorCB
  * @param {CaptureVideoOptions} options
  */
-Capture.prototype.captureVideoFG = function(successCallback, errorCallback, options){
-    _capture("captureVideoFG", successCallback, errorCallback, options);
+CaptureFG.prototype.captureVideoFG = function(successCallback, errorCallback, options){
+    _captureFG("captureVideoFG", successCallback, errorCallback, options);
 };
 
 
