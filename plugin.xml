@@ -61,7 +61,6 @@
         <source-file src="src/android/CaptureFG.java" target-dir="src/com/tuxpan/foregroundvideocapture" />
         <source-file src="src/android/CaptureWindow.java" target-dir="src/com/tuxpan/foregroundvideocapture" />
         <source-file src="src/android/FileHelper.java" target-dir="src/com/tuxpan/foregroundvideocapture" />
-        <source-file src="src/android/MediaCodecWrapper.java" target-dir="src/com/tuxpan/foregroundvideocapture" />
         <source-file src="src/android/RecorderActivity.java" target-dir="src/com/tuxpan/foregroundvideocapture" />
                 
         <source-file src="src/android/sample_main.xml" target-dir="res/layout" />

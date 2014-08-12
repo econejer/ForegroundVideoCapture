@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.tuxpan.foregroundvideo;
+package com.tuxpan.foregroundvideocapture;
 
 import android.media.*;
 import android.os.Handler;

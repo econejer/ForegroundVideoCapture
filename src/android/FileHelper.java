@@ -16,7 +16,7 @@
        specific language governing permissions and limitations
        under the License.
  */
-package com.tuxpan.foregroundvideo;
+package com.tuxpan.foregroundvideocapture;
 
 import android.net.Uri;
 import android.webkit.MimeTypeMap;

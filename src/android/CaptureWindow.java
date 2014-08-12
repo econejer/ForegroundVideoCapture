@@ -1,4 +1,4 @@
-package com.tuxpan.foregroundvideo;
+package com.tuxpan.foregroundvideocapture;
 
 import android.content.Context;
 import android.content.res.Configuration;
