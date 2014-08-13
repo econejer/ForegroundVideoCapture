@@ -71,7 +71,8 @@
 var captureFG = {
     
    captureVideoFG : function(successCallback, errorCallback, options){
-        var exec = require('cordova/exec'), MediaFile = require('./MediaFile');
+        var exec = require('cordova/exec');
+        var MediaFile = require('./MediaFile');
         var win = function(pluginResult) {
             var mediaFiles = [];
             var i;
