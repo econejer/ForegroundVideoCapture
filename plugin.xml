@@ -14,22 +14,6 @@
         <engine name="cordova" version=">=3.3.0" />
     </engines>    
 
-    <js-module src="www/CaptureError.js" name="CaptureError">
-        <clobbers target="CaptureError" />
-    </js-module>
-    
-    <js-module src="www/CaptureVideoOptions.js" name="CaptureVideoOptions">
-        <clobbers target="CaptureVideoOptions" />
-    </js-module>
-
-    <js-module src="www/MediaFile.js" name="MediaFile">
-        <clobbers target="MediaFile" />
-    </js-module>
-
-    <js-module src="www/MediaFileData.js" name="MediaFileData">
-        <clobbers target="MediaFileData" />
-    </js-module>
-
     <js-module src="www/captureFG.js" name="captureFG">
         <clobbers target="window.captureFG" />
     </js-module>
