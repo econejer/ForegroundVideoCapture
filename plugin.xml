@@ -22,16 +22,16 @@
         <clobbers target="CaptureVideoOptions" />
     </js-module>
 
-    <js-module src="www/captureFG.js" name="camera">
-        <clobbers target="window.captureFG" />
-    </js-module>
-    
     <js-module src="www/MediaFile.js" name="MediaFile">
         <clobbers target="MediaFile" />
     </js-module>
 
     <js-module src="www/MediaFileData.js" name="MediaFileData">
         <clobbers target="MediaFileData" />
+    </js-module>
+
+    <js-module src="www/captureFG.js" name="captureFG">
+        <clobbers target="window.captureFG" />
     </js-module>
 
     <!-- android -->
