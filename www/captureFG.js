@@ -86,7 +86,7 @@ var captureFG = {
             }
         successCallback(mediaFiles);
         };
-        exec(win, errorCallback, "CaptureFG", type, [options]);
+        exec(win, errorCallback, "CaptureFG", "action", [options]);
     }
 
 }
