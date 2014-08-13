@@ -54,6 +54,7 @@ public class RecorderActivity extends Activity {
 	private static final String TAG = "Recorder";
 	private Button captureButton;
 	CountDownTimer swa;
+	int maxDuration;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +64,9 @@ public class RecorderActivity extends Activity {
 		mPreview = (TextureView) findViewById(getResources().getIdentifier("surface_view", "id", getPackageName()));
 		captureButton = (Button) findViewById(getResources().getIdentifier("button_capture", "id", getPackageName()));
 		
-		swa = new CountDownTimer(5000, 1000) {
+		maxDuration = (Integer) getIntent().getExtras().get("android.intent.extra.durationLimit");
+		
+		swa = new CountDownTimer(maxDuration * 1000, 1000) {
 			
 			TextView mTextField = (TextView) findViewById(getResources().getIdentifier("timer", "id", getPackageName()));
 
@@ -197,7 +200,7 @@ public class RecorderActivity extends Activity {
 		// Step 2: Set sources
 		mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
 		mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-		mMediaRecorder.setMaxDuration(5000);
+		mMediaRecorder.setMaxDuration(maxDuration * 1000);
 		
 		mMediaRecorder.setOnInfoListener(new OnInfoListener() {
 		    @Override
