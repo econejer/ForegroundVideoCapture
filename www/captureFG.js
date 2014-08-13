@@ -69,9 +69,9 @@
 // });
 
 var captureFG = {
-    var exec = require('cordova/exec'), MediaFile = require('./MediaFile');
-
-    captureVideoFG : function(successCallback, errorCallback, options){
+    
+   captureVideoFG : function(successCallback, errorCallback, options){
+        var exec = require('cordova/exec'), MediaFile = require('./MediaFile');
         var win = function(pluginResult) {
             var mediaFiles = [];
             var i;
@@ -86,7 +86,7 @@ var captureFG = {
             }
         successCallback(mediaFiles);
         };
-    exec(win, errorCallback, "CaptureFG", type, [options]);
+        exec(win, errorCallback, "CaptureFG", type, [options]);
     }
 
 }
