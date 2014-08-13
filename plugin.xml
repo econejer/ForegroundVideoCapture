@@ -49,7 +49,7 @@
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <activity
-                android:name="com.tuxpan.foregroundvideo.RecorderActivity" 
+                android:name="com.tuxpan.foregroundvideocapture.RecorderActivity" 
                 android:screenOrientation="landscape" 
                 android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
             />
