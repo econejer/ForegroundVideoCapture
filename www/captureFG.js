@@ -1,5 +1,3 @@
-cordova.define("com.tuxpan.foregroundvideocapture.captureFG", function(require, exports, module) {
-
     var captureFG = {
 
         captureVideoFG : function(successCallback, errorCallback, options) {
@@ -21,4 +19,3 @@ cordova.define("com.tuxpan.foregroundvideocapture.captureFG", function(require, 
 
     }
     module.exports = captureFG;
-});
