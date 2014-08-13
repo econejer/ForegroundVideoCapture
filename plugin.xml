@@ -23,7 +23,7 @@
     </js-module>
 
     <js-module src="www/captureFG.js" name="camera">
-        <clobbers target="navigator.captureFG" />
+        <clobbers target="window.captureFG" />
     </js-module>
     
     <js-module src="www/MediaFile.js" name="MediaFile">
