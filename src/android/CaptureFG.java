@@ -200,7 +200,7 @@ public class CaptureFG extends CordovaPlugin {
 		try {
 			// File properties
 			obj.put("name", fp.getName());
-			obj.put("fullPath", fp.toURI().toString());
+			obj.put("fullPath", "file://" + getTempDirectoryPath() + "/video.3gp");
 			// Because of an issue with MimeTypeMap.getMimeTypeFromExtension()
 			// all .3gpp files
 			// are reported as video/3gpp. I'm doing this hacky check of the URI

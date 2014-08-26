@@ -1,74 +1,79 @@
-/*
- * Copyright (C) 2013 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.tuxpan.foregroundvideocapture;
 
-import android.annotation.TargetApi;
+import java.io.IOException;
+import java.util.List;
+
 import android.app.Activity;
+import android.content.pm.ActivityInfo;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.media.MediaRecorder.OnInfoListener;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.view.TextureView;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.TextView;
 
-import java.io.IOException;
-import java.util.List;
+public class RecorderActivity extends Activity implements OnClickListener, SurfaceHolder.Callback {
 
-/**
- * This activity uses the camera/camcorder as the A/V source for the
- * {@link android.media.MediaRecorder} API. A {@link android.view.TextureView}
- * is used as the camera preview which limits the code to API 14+. This can be
- * easily replaced with a {@link android.view.SurfaceView} to run on older
- * devices.
- */
-public class RecorderActivity extends Activity {
+	public static final String LOGTAG = "VIDEOCAPTURE";
 
-	private Camera mCamera;
-	private TextureView mPreview;
-	private MediaRecorder mMediaRecorder;
+	private MediaRecorder recorder;
+	private SurfaceHolder holder;
+	private CamcorderProfile camcorderProfile;
+	private Camera camera;
 
-	private boolean isRecording = false;
-	private static final String TAG = "Recorder";
+	private boolean recording = false;
+	private boolean usecamera = true;
+	private boolean previewRunning = false;
+
+	private SurfaceView cameraView;
 	private Button captureButton;
-	CountDownTimer swa;
-	int maxDuration;
+	private CountDownTimer timer;
+	private int maxDuration;
+	private Animation animScale;
+	private TextView mTextField;
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(getResources().getIdentifier("sample_main", "layout", getPackageName()));
 
-		mPreview = (TextureView) findViewById(getResources().getIdentifier("surface_view", "id", getPackageName()));
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
+		camcorderProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
+
+		setContentView(getResources().getIdentifier("main", "layout", getPackageName()));
+
+		cameraView = (SurfaceView) findViewById(getResources().getIdentifier("CameraView", "id", getPackageName()));
+
+		holder = cameraView.getHolder();
+		holder.addCallback(this);
+		holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+
+
 		captureButton = (Button) findViewById(getResources().getIdentifier("button_capture", "id", getPackageName()));
-		
 		maxDuration = (Integer) getIntent().getExtras().get("android.intent.extra.durationLimit");
+
+		captureButton.setOnClickListener(this);
 		
-		swa = new CountDownTimer(maxDuration * 1000, 1000) {
-			
-			TextView mTextField = (TextView) findViewById(getResources().getIdentifier("timer", "id", getPackageName()));
+		animScale = AnimationUtils.loadAnimation(this, getResources().getIdentifier("anim_scale", "anim", getPackageName()));
+		
+		mTextField = (TextView) findViewById(getResources().getIdentifier("textoTimer", "id", getPackageName()));
+		
+		timer = new CountDownTimer(maxDuration * 1000, 1000) {
 
 			public void onTick(long millisUntilFinished) {
 				mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
@@ -80,129 +85,25 @@ public class RecorderActivity extends Activity {
 		};
 	}
 
-	/**
-	 * The capture button controls all user interaction. When recording, the
-	 * button click stops recording, releases
-	 * {@link android.media.MediaRecorder} and {@link android.hardware.Camera}.
-	 * When not recording, it prepares the {@link android.media.MediaRecorder}
-	 * and starts recording.
-	 * 
-	 * @param view
-	 *            the view generating the event.
-	 */
-	public void onCaptureClick(View view) {
-		if (isRecording) {
-			// BEGIN_INCLUDE(stop_release_media_recorder)
+	private void prepareRecorder() {
+		recorder = new MediaRecorder();
+		recorder.setPreviewDisplay(holder.getSurface());
 
-			// stop recording and release camera
-			mMediaRecorder.stop(); // stop the recording
-			releaseMediaRecorder(); // release the MediaRecorder object
-			mCamera.lock(); // take camera access back from MediaRecorder
-
-			// inform the user that recording has stopped
-			setCaptureButtonText("Capture");
-			isRecording = false;
-			releaseCamera();
-			// END_INCLUDE(stop_release_media_recorder)
-			swa.cancel();
-			setResult(RESULT_OK);
-			finish();
-
-		} else {
-
-			// BEGIN_INCLUDE(prepare_start_media_recorder)
-
-			new MediaPrepareTask().execute(null, null, null);
-
-			// END_INCLUDE(prepare_start_media_recorder)
-
+		if (usecamera) {
+			camera.unlock();
+			recorder.setCamera(camera);
 		}
-	}
 
-	private void setCaptureButtonText(String title) {
-		captureButton.setText(title);
-	}
+		recorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
+		recorder.setVideoSource(MediaRecorder.VideoSource.DEFAULT);
+		recorder.setMaxDuration(maxDuration * 1000);
 
-	@Override
-	protected void onPause() {
-		super.onPause();
-		// if we are using MediaRecorder, release it first
-		releaseMediaRecorder();
-		// release the camera immediately on pause event
-		releaseCamera();
-	}
-
-	private void releaseMediaRecorder() {
-		if (mMediaRecorder != null) {
-			// clear recorder configuration
-			mMediaRecorder.reset();
-			// release the recorder object
-			mMediaRecorder.release();
-			mMediaRecorder = null;
-			// Lock camera for later use i.e taking it back from MediaRecorder.
-			// MediaRecorder doesn't need it anymore and we will release it if
-			// the activity pauses.
-			mCamera.lock();
-		}
-	}
-
-	private void releaseCamera() {
-		if (mCamera != null) {
-			// release the camera for other applications
-			mCamera.release();
-			mCamera = null;
-		}
-	}
-
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-	private boolean prepareVideoRecorder() {
-
-		// BEGIN_INCLUDE (configure_preview)
-		mCamera = CameraHelper.getDefaultCameraInstance();
-		// We need to make sure that our preview and recording video size are
-		// supported by the
-		// camera. Query camera to find all the sizes and choose the optimal
-		// size given the
-		// dimensions of our preview surface.
-		Camera.Parameters parameters = mCamera.getParameters();
-		List<Camera.Size> mSupportedPreviewSizes = parameters.getSupportedPreviewSizes();
-		Camera.Size optimalSize = CameraHelper.getOptimalPreviewSize(mSupportedPreviewSizes, mPreview.getWidth(), mPreview.getHeight());
-
-		// Use the same size for recording profile.
-		CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
-		profile.videoFrameWidth = optimalSize.width;
-		profile.videoFrameHeight = optimalSize.height;
-
-		profile.duration = 5;
-		profile.quality = CamcorderProfile.QUALITY_LOW;
-
-		// likewise for the camera object itself.
-		parameters.setPreviewSize(profile.videoFrameWidth, profile.videoFrameHeight);
-		mCamera.setParameters(parameters);
-		try {
-			// Requires API level 11+, For backward compatibility use {@link
-			// setPreviewDisplay}
-			// with {@link SurfaceView}
-			mCamera.setPreviewTexture(mPreview.getSurfaceTexture());
-		} catch (IOException e) {
-			Log.e(TAG, "Surface texture is unavailable or unsuitable" + e.getMessage());
-			return false;
-		}
-		// END_INCLUDE (configure_preview)
-
-		// BEGIN_INCLUDE (configure_media_recorder)
-		mCamera.unlock();
-		mMediaRecorder = new MediaRecorder();
-
-		// Step 1: Unlock and set camera to MediaRecorder
-		mMediaRecorder.setCamera(mCamera);
-
-		// Step 2: Set sources
-		mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
-		mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-		mMediaRecorder.setMaxDuration(maxDuration * 1000);
+		recorder.setProfile(camcorderProfile);
 		
-		mMediaRecorder.setOnInfoListener(new OnInfoListener() {
+		Uri fileUri = (Uri) getIntent().getExtras().get(MediaStore.EXTRA_OUTPUT);
+		recorder.setOutputFile(fileUri.getPath());
+		
+		recorder.setOnInfoListener(new OnInfoListener() {
 		    @Override
 		    public void onInfo(MediaRecorder mr, int what, int extra) {                     
 		        if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) {
@@ -213,60 +114,146 @@ public class RecorderActivity extends Activity {
 		    }
 		});
 
-		// Step 3: Set a CamcorderProfile (requires API Level 8 or higher)
-		mMediaRecorder.setProfile(profile);
-
-		// Step 4: Set output file
-		Uri fileUri = (Uri) getIntent().getExtras().get(MediaStore.EXTRA_OUTPUT);
-		mMediaRecorder.setOutputFile(fileUri.getPath());
-		// END_INCLUDE (configure_media_recorder)
-
-		// Step 5: Prepare configured MediaRecorder
 		try {
-			mMediaRecorder.prepare();
+			recorder.prepare();
 		} catch (IllegalStateException e) {
-			Log.d(TAG, "IllegalStateException preparing MediaRecorder: " + e.getMessage());
-			releaseMediaRecorder();
-			return false;
+			e.printStackTrace();
+			finish();
 		} catch (IOException e) {
-			Log.d(TAG, "IOException preparing MediaRecorder: " + e.getMessage());
-			releaseMediaRecorder();
-			return false;
+			e.printStackTrace();
+			finish();
 		}
-		return true;
+	}
+	
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		// if we are using MediaRecorder, release it first
+		releaseMediaRecorder();
+		// release the camera immediately on pause event
+		releaseCamera();
+	}
+	
+	private void releaseMediaRecorder() {
+		if (recorder != null) {
+			// clear recorder configuration
+			recorder.reset();
+			// release the recorder object
+			recorder.release();
+			recorder = null;
+			// Lock camera for later use i.e taking it back from MediaRecorder.
+			// MediaRecorder doesn't need it anymore and we will release it if
+			// the activity pauses.
+			camera.lock();
+		}
+	}
+	
+	private void releaseCamera() {
+		if (camera != null) {
+			// release the camera for other applications
+			camera.release();
+			camera = null;
+		}
 	}
 
-	/**
-	 * Asynchronous task for preparing the {@link android.media.MediaRecorder}
-	 * since it's a long blocking operation.
-	 */
-	class MediaPrepareTask extends AsyncTask<Void, Void, Boolean> {
-
-		@Override
-		protected Boolean doInBackground(Void... voids) {
-			// initialize video camera
-			if (prepareVideoRecorder()) {
-				// Camera is available and unlocked, MediaRecorder is prepared,
-				// now you can start recording
-				mMediaRecorder.start();
-				swa.start();
-				isRecording = true;
-			} else {
-				// prepare didn't work, release the camera
-				releaseMediaRecorder();
-				return false;
+	public void onClick(View v) {
+		v.startAnimation(animScale);
+		if (recording) {
+			recorder.stop();
+			if (usecamera) {
+				try {
+					camera.reconnect();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
-			return true;
+			// recorder.release();
+			recording = false;
+			Log.v(LOGTAG, "Recording Stopped");
+			// Let's prepareRecorder so we can record again
+			prepareRecorder();
+			
+			timer.cancel();
+			setResult(RESULT_OK);
+			finish();
+			
+		} else {
+			recording = true;
+			recorder.start();
+			captureButton.setText("Stop");
+			timer.start();
+			
+			Log.v(LOGTAG, "Recording Started");
+		}
+	}
+
+	public void surfaceCreated(SurfaceHolder holder) {
+		Log.v(LOGTAG, "surfaceCreated");
+
+		if (usecamera) {
+			camera = Camera.open();
+
+			try {
+				camera.setPreviewDisplay(holder);
+				camera.startPreview();
+				previewRunning = true;
+			} catch (IOException e) {
+				Log.e(LOGTAG, e.getMessage());
+				e.printStackTrace();
+			}
 		}
 
-		@Override
-		protected void onPostExecute(Boolean result) {
-			if (!result) {
-				RecorderActivity.this.finish();
-			}
-			// inform the user that recording has started
-			setCaptureButtonText("Stop");
+	}
 
+	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+		Log.v(LOGTAG, "surfaceChanged");
+
+		if (!recording && usecamera) {
+			if (previewRunning) {
+				camera.stopPreview();
+			}
+
+			try {
+				Camera.Parameters p = camera.getParameters();
+
+				List<Camera.Size> mSupportedPreviewSizes = p.getSupportedPreviewSizes();
+				Camera.Size optimalSize = CameraHelper.getOptimalPreviewSize(mSupportedPreviewSizes, cameraView.getWidth(), cameraView.getHeight());
+
+				p.setPreviewSize(optimalSize.width, optimalSize.height);
+
+				camera.setParameters(p);
+
+				camera.setPreviewDisplay(holder);
+				camera.startPreview();
+				previewRunning = true;
+			} catch (IOException e) {
+				Log.e(LOGTAG, e.getMessage());
+				e.printStackTrace();
+			}
+
+			prepareRecorder();
 		}
+	}
+
+	public void surfaceDestroyed(SurfaceHolder holder) {
+		Log.v(LOGTAG, "surfaceDestroyed");
+		if (recording) {
+			if(recorder != null){
+				recorder.stop();
+				recording = false;
+			}
+		}
+		
+		if(recorder != null)
+			recorder.release();
+		
+		if (usecamera) {
+			previewRunning = false;
+			// camera.lock();
+			if(camera != null)
+				camera.release();
+		}
+		// finish();
 	}
 }
