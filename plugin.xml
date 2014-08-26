@@ -47,7 +47,8 @@
         <source-file src="src/android/FileHelper.java" target-dir="src/com/tuxpan/foregroundvideocapture" />
         <source-file src="src/android/RecorderActivity.java" target-dir="src/com/tuxpan/foregroundvideocapture" />
                 
-        <source-file src="src/android/sample_main.xml" target-dir="res/layout" />
+        <source-file src="src/android/main.xml" target-dir="res/layout" />
+        <source-file src="src/android/anim_scale.xml" target-dir="res/anim" />
                    
      </platform>
            
